@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WanderWave Travel — Home</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --accent:#ff6b6b; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+    --glass-2: rgba(255,255,255,0.02);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:linear-gradient(180deg,#071028 0%, #071827 60%); color:#e6eef8;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  }
+  header{
+    padding:28px 24px; display:flex; justify-content:space-between; align-items:center;
+    gap:12px; max-width:1200px; margin:0 auto;
+  }
+  .brand{display:flex; gap:12px; align-items:center}
+  .logo{
+    width:52px; height:52px; border-radius:12px; background:linear-gradient(135deg,var(--accent),#ffb86b);
+    display:flex; align-items:center; justify-content:center; font-weight:700; color:#071827; font-size:18px;
+    box-shadow:0 8px 30px rgba(255,107,107,0.12);
+  }
+  nav a{color:var(--muted); text-decoration:none; margin-left:16px;}
+  .hero{
+    max-width:1200px; margin:18px auto; padding:36px; border-radius:16px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    display:grid; grid-template-columns: 1fr 420px; gap:28px; align-items:center;
+  }
+  .hero-left h1{font-size:34px; margin:0 0 10px}
+  .tag{color:var(--muted); margin-bottom:18px}
+  .cta{display:flex; gap:12px; align-items:center}
+  .btn{
+    background:var(--accent); color:#071827; padding:12px 16px; border-radius:10px; border:0; cursor:pointer; font-weight:600;
+    box-shadow:0 8px 30px rgba(255,107,107,0.12);
+  }
+  .btn.ghost{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.04)}
+  .hero-right{
+    height:240px; border-radius:12px; overflow:hidden; position:relative; background-image: url('https://via.placeholder.com/800x400?text=WanderWave+Banner');
+    background-size:cover; background-position:center;
+  }
+  .products{max-width:1200px; margin:28px auto; padding:24px}
+  .grid{display:grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap:18px}
+  .card{
+    background:var(--card); border-radius:14px; overflow:hidden; transition: transform .22s ease, box-shadow .22s;
+    box-shadow: 0 6px 20px rgba(2,6,23,0.6);
+    display:flex; flex-direction:column;
+  }
+  .card:hover{ transform: translateY(-8px); box-shadow: 0 18px 40px rgba(2,6,23,0.8)}
+  .card img{width:100%; height:150px; object-fit:cover; display:block}
+  .card-body{padding:14px; display:flex; flex-direction:column; gap:10px; flex:1}
+  .card h3{margin:0; font-size:18px}
+  .desc{color:var(--muted); font-size:14px; flex:1}
+  .card-footer{display:flex; justify-content:space-between; align-items:center; padding:12px; border-top:1px solid rgba(255,255,255,0.02)}
+  .price{font-weight:700}
+  .book-btn{padding:8px 12px; border-radius:10px; border:0; cursor:pointer; background:linear-gradient(90deg,#4fd1c5,#60a5fa); color:#052025; font-weight:700}
+  footer{text-align:center; color:var(--muted); padding:24px 12px}
+  /* custom context menu */
+  .context-menu{position:fixed; background:#071827; border:1px solid rgba(255,255,255,0.04); color:#e6eef8; padding:8px; border-radius:8px; display:none; z-index:9999; min-width:160px; box-shadow:0 10px 40px rgba(2,6,23,0.6)}
+  .context-menu button{background:transparent; color:inherit; border:0; width:100%; text-align:left; padding:10px; cursor:pointer; border-radius:6px}
+  .context-menu button:hover{background:var(--glass)}
+  @media (max-width:900px){
+    .hero{grid-template-columns:1fr; padding:20px}
+    .hero-right{height:180px}
+    header{padding:16px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">WW</div>
+    <div>
+      <div style="font-weight:700">WanderWave Travel</div>
+      <div style="font-size:13px;color:var(--muted)">Curated trips. Lasting memories.</div>
+    </div>
+  </div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="form.html">Cart / Form</a>
+    <a href="payment.html">Payment</a>
+  </nav>
+</header>
+
+<section class="hero" aria-label="Hero">
+  <div class="hero-left">
+    <h1>See the world — one stunning destination at a time</h1>
+    <p class="tag">Handpicked trips, flexible bookings, local experiences. Book your next adventure with confidence.</p>
+    <div class="cta">
+      <button class="btn" id="exploreBtn">Explore Packages</button>
+      <button class="btn ghost" id="viewCart">View Cart</button>
+    </div>
+  </div>
+  <div class="hero-right" role="img" aria-label="Travel banner"></div>
+</section>
+
+<section class="products">
+  <h2 style="margin:0 0 12px">Popular Destinations</h2>
+  <div class="grid" id="productGrid">
+    <!-- Cards inserted by JS -->
+  </div>
+</section>
+
+<footer>
+  © <span id="year"></span> WanderWave Travel • Smooth bookings • Friendly support
+</footer>
+
+<!-- custom context menu -->
+<div class="context-menu" id="contextMenu" role="menu">
+  <button data-action="home">Go to Home</button>
+  <button data-action="cart">Open Cart / Form</button>
+  <button data-action="help">Help</button>
+  <button data-action="refresh">Refresh</button>
+</div>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const products = [
+    {id:'th-phuket', country:'Thailand', city:'Phuket', price:499, desc:'Beaches, islands & vibrant nightlife', img:'https://via.placeholder.com/600x400?text=Phuket'},
+    {id:'it-rome', country:'Italy', city:'Rome', price:799, desc:'Ancient ruins, gelato & art', img:'https://via.placeholder.com/600x400?text=Rome'},
+    {id:'ph-manila', country:'Philippines', city:'Manila', price:399, desc:'Historic streets & bay sunsets', img:'https://via.placeholder.com/600x400?text=Manila'},
+    {id:'id-jakarta', country:'Indonesia', city:'Jakarta', price:459, desc:'Urban culture & culinary delights', img:'https://via.placeholder.com/600x400?text=Jakarta'},
+    {id:'us-ny', country:'USA', city:'New York', price:899, desc:'Skylines, Broadway & endless energy', img:'https://via.placeholder.com/600x400?text=New+York'},
+    {id:'fr-paris', country:'France', city:'Paris', price:849, desc:'Romance, museums & cafes', img:'https://via.placeholder.com/600x400?text=Paris'}
+  ];
+
+  const grid = document.getElementById('productGrid');
+
+  function createCard(p){
+    const card = document.createElement('div'); card.className='card';
+    card.innerHTML = `
+      <img src="${p.img}" alt="${p.city} image" />
+      <div class="card-body">
+        <h3>${p.city}, ${p.country}</h3>
+        <div class="desc">${p.desc}</div>
+        <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+          <div class="price">$${p.price}</div>
+          <button class="book-btn" data-id="${p.id}">Book Now</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+
+  products.forEach(createCard);
+
+  // Book Now -> save product and go to form.html
+  grid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-id]');
+    if(!btn) return;
+    const id = btn.dataset.id;
+    const product = products.find(x=>x.id===id);
+    if(product){
+      localStorage.setItem('selectedProduct', JSON.stringify(product));
+      // store timestamp for better UX
+      localStorage.setItem('selectedAt', new Date().toISOString());
+      window.location.href = 'form.html';
+    }
+  });
+
+  // quick buttons
+  document.getElementById('viewCart').addEventListener('click', ()=> location.href='form.html');
+  document.getElementById('exploreBtn').addEventListener('click', ()=> window.scrollTo({top:document.querySelector('.products').offsetTop - 20, behavior:'smooth'}));
+
+  // CUSTOM CONTEXT MENU
+  const ctx = document.getElementById('contextMenu');
+  window.addEventListener('contextmenu', (e)=>{
+    e.preventDefault();
+    ctx.style.left = e.pageX + 'px';
+    ctx.style.top = e.pageY + 'px';
+    ctx.style.display = 'block';
+  });
+  window.addEventListener('click', ()=> ctx.style.display = 'none');
+  ctx.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const action = ev.target.getAttribute('data-action');
+    if(!action) return;
+    if(action==='home') location.href = 'index.html';
+    if(action==='cart') location.href = 'form.html';
+    if(action==='refresh') location.reload();
+    if(action==='help') alert('Need help? Email support@wanderwave.example or call +1-800-TRAVEL');
+    ctx.style.display = 'none';
+  });
+
+  // small accessibility: keyboard "c" to open cart
+  window.addEventListener('keydown', (e)=>{ if(e.key==='c') location.href='form.html' });
+</script>
+</body>
+</html>
