@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WanderWave — Thank you!</title>
+<style>
+  :root{--bg:#071025;--card:#0b1220;--accent:#8b5cf6;--muted:#94a3b8}
+  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#051223,#071025);color:#eaf2ff;display:flex;align-items:center;justify-content:center;height:100vh}
+  .wrap{max-width:860px;width:96%;display:grid;grid-template-columns:1fr 360px;gap:20px}
+  .card{background:var(--card);padding:28px;border-radius:14px}
+  h1{margin:0 0 8px}
+  p{color:var(--muted)}
+  .btn{display:inline-block;margin-top:14px;padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#071827;font-weight:700;text-decoration:none}
+  .summary{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px}
+  @media (max-width:900px){ .wrap{grid-template-columns:1fr; padding:12px} body{padding:24px;height:auto} }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🎉 Thank you for your booking!</h1>
+      <p>Your ticket has been booked successfully. A confirmation has been saved to your browser (demo receipt).</p>
+
+      <div id="receiptArea" style="margin-top:18px"></div>
+
+      <div style="margin-top:18px">
+        <a href="index.html" class="btn">Back to Home</a>
+        <button id="viewReceipt" style="margin-left:12px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--muted);cursor:pointer">View Receipt</button>
+      </div>
+    </div>
+
+    <aside class="card summary" id="sideSummary">
+      <h3 style="margin-top:0">Booking Summary</h3>
+      <div id="summaryContent" style="color:var(--muted)"></div>
+    </aside>
+  </div>
+
+<script>
+  // show receipt if present
+  const receiptRaw = localStorage.getItem('receipt');
+  const summary = document.getElementById('summaryContent');
+  const receiptArea = document.getElementById('receiptArea');
+
+  function renderReceipt(r){
+    if(!r) return;
+    const prod = r.product || (r.city ? r : null);
+    receiptArea.innerHTML = `
+      <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:10px">
+        <strong>${prod ? prod.city + ', ' + prod.country : '—'}</strong>
+        <div style="color:var(--muted);margin-top:6px">${prod ? prod.desc : ''}</div>
+        <div style="margin-top:8px">Paid: <strong>${r.payment ? r.payment.cardMasked : '—'}</strong></div>
+        <div style="color:var(--muted);font-size:13px;margin-top:6px">Booked at: ${r.paidAt ? new Date(r.paidAt).toLocaleString(): (r.createdAt ? new Date(r.createdAt).toLocaleString() : '—')}</div>
+      </div>
+    `;
+    summary.innerHTML = `
+      <div><strong>Traveler</strong><div style="color:var(--muted)">${r.fullName || '—'}</div></div>
+      <div style="margin-top:8px"><strong>Contact</strong><div style="color:var(--muted)">${r.email || '—'}</div></div>
+      <div style="margin-top:8px"><strong>Destination</strong><div style="color:var(--muted)">${prod ? prod.city + ', ' + prod.country : '—'}</div></div>
+      <div style="margin-top:8px"><strong>Price</strong><div style="color:var(--muted)">$${prod ? prod.price : '—'}</div></div>
+    `;
+  }
+
+  if(receiptRaw){
+    try{
+      const r = JSON.parse(receiptRaw);
+      renderReceipt(r);
+    }catch(e){
+      summary.textContent = 'No receipt found.';
+    }
+  } else {
+    summary.textContent = 'No recent booking in this browser. If you completed payment, the demo receipt may have been cleared.';
+    receiptArea.innerHTML = '';
+  }
+
+  document.getElementById('viewReceipt').addEventListener('click', ()=>{
+    if(!receiptRaw){ alert('No receipt found in browser storage.'); return; }
+    // show a popover or copy receipt text
+    try{
+      const r = JSON.parse(receiptRaw);
+      alert('Receipt preview:\\n' + JSON.stringify(r, null, 2));
+    }catch(e){ alert('Invalid receipt data.'); }
+  });
+
+  // context menu: simple options
+  const ctx = document.createElement('div');
+  ctx.className = 'context-menu'; ctx.style.position='fixed'; ctx.style.display='none'; ctx.style.zIndex=9999;
+  ctx.innerHTML = `<button data-action="home">Go to Home</button><button data-action="new">Book Again</button><button data-action="clear">Clear Receipt</button>`;
+  document.body.appendChild(ctx);
+
+  window.addEventListener('contextmenu', (e)=>{ e.preventDefault(); ctx.style.left = e.pageX + 'px'; ctx.style.top = e.pageY + 'px'; ctx.style.display='block'; });
+  window.addEventListener('click', ()=> ctx.style.display='none');
+  ctx.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const a = ev.target.getAttribute('data-action');
+    if(!a) return;
+    if(a==='home') location.href='index.html';
+    if(a==='new') { localStorage.removeItem('receipt'); location.href='index.html'; }
+    if(a==='clear') { if(confirm('Clear receipt?')){ localStorage.removeItem('receipt'); location.reload(); } }
+    ctx.style.display='none';
+  });
+</script>
+</body>
+</html>
