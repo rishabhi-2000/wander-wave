@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WanderWave Travel — Payment</title>
+<style>
+  :root{--bg:#071025; --card:#0b1220; --accent:#60a5fa; --muted:#94a3b8}
+  body{margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#051223,#071025);color:#e6eef8}
+  header{padding:18px;max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+  main{max-width:900px;margin:16px auto;padding:20px;display:grid;grid-template-columns:1fr 360px;gap:20px}
+  .card{background:var(--card);border-radius:12px;padding:16px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;margin-bottom:12px}
+  .pay-btn{background:var(--accent);color:#021022;padding:12px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer}
+  .product-summary{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px}
+  @media (max-width:900px){ main{grid-template-columns:1fr; padding:12px} }
+  .context-menu{position:fixed; background:#071827; border:1px solid rgba(255,255,255,0.04); color:#e6eef8; padding:8px; border-radius:8px; display:none; z-index:9999; min-width:160px; box-shadow:0 10px 40px rgba(2,6,23,0.6)}
+  .context-menu button{background:transparent; color:inherit; border:0; width:100%; text-align:left; padding:10px; cursor:pointer; border-radius:6px}
+  .context-menu button:hover{background:rgba(255,255,255,0.02)}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;gap:12px;align-items:center">
+    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#60a5fa,#4fd1c5);display:flex;align-items:center;justify-content:center;color:#021022;font-weight:700">WW</div>
+    <div>
+      <strong>WanderWave Travel</strong><div style="font-size:13px;color:var(--muted)">Secure payment</div>
+    </div>
+  </div>
+  <div>
+    <a href="index.html" style="color:var(--muted);text-decoration:none">Home</a>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <h2>Payment details</h2>
+    <p style="color:var(--muted);margin-top:6px">This is a demo payment form. No real transactions occur.</p>
+
+    <div id="productNotice" style="margin-top:12px;color:var(--muted)"></div>
+
+    <form id="paymentForm" onsubmit="return false;" style="margin-top:10px">
+      <label for="cardNumber">Card Number</label>
+      <input id="cardNumber" placeholder="4242 4242 4242 4242" maxlength="19" inputmode="numeric" required>
+
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label for="expiry">Expiry (MM/YY)</label>
+          <input id="expiry" placeholder="08/26" maxlength="5" required>
+        </div>
+        <div style="width:120px">
+          <label for="cvv">CVV</label>
+          <input id="cvv" placeholder="123" maxlength="4" inputmode="numeric" required>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <button class="pay-btn" id="payBtn" type="button">Proceed to Pay</button>
+        <button type="button" id="backBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px;border-radius:10px;color:var(--muted)">Back</button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="card product-summary" id="orderCard">
+    <h3 style="margin-top:0">Order Summary</h3>
+    <div id="orderContent" style="color:var(--muted)"></div>
+  </aside>
+</main>
+
+<!-- custom context menu -->
+<div class="context-menu" id="contextMenu" role="menu">
+  <button data-action="home">Go to Home</button>
+  <button data-action="thank">Complete Payment</button>
+  <button data-action="view">View Cart / Form</button>
+</div>
+
+<script>
+  // populate product details
+  const orderContent = document.getElementById('orderContent');
+  const pRaw = localStorage.getItem('bookingDetails') || localStorage.getItem('selectedProduct');
+  if(!pRaw){
+    orderContent.innerHTML = '<div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:8px">No booking found. Please select a package first.</div>';
+    document.getElementById('payBtn').disabled = true;
+    document.getElementById('productNotice').textContent = 'No package selected.';
+  } else {
+    let booking;
+    try{ booking = JSON.parse(pRaw); }catch(e){ booking = null; }
+    // booking may be either full booking (with user) or product only
+    const prod = booking && booking.product ? booking.product : (booking && booking.city ? booking : null);
+    const user = booking && booking.fullName ? booking.fullName : '';
+    if(prod){
+      orderContent.innerHTML = `
+        <img src="${prod.img}" alt="${prod.city}" style="width:100%;border-radius:8px;margin-bottom:8px" />
+        <strong>${prod.city}, ${prod.country}</strong>
+        <div style="color:var(--muted);font-size:14px;margin-top:6px">${prod.desc}</div>
+        <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-weight:800">$${prod.price}</div>
+          <div style="font-size:12px;color:var(--muted)">Traveler: ${user || '—'}</div>
+        </div>
+      `;
+      document.getElementById('productNotice').textContent = prod.city + ' — $' + prod.price;
+    } else {
+      orderContent.innerHTML = '<div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:8px">No valid product found.</div>';
+      document.getElementById('payBtn').disabled = true;
+    }
+  }
+
+  // simple input formatting for card number
+  const cardInput = document.getElementById('cardNumber');
+  cardInput.addEventListener('input', (e)=>{
+    let v = e.target.value.replace(/\D/g,'').slice(0,16);
+    v = v.replace(/(.{4})/g,'$1 ').trim();
+    e.target.value = v;
+  });
+
+  const expiry = document.getElementById('expiry');
+  expiry.addEventListener('input', (e)=>{
+    let v = e.target.value.replace(/\D/g,'').slice(0,4);
+    if(v.length>2) v = v.slice(0,2)+'/'+v.slice(2);
+    e.target.value = v;
+  });
+
+  document.getElementById('payBtn').addEventListener('click', ()=>{
+    // basic validations
+    const card = cardInput.value.replace(/\s/g,'');
+    const exp = expiry.value;
+    const cvv = document.getElementById('cvv').value.trim();
+    if(card.length<12){ alert('Enter a valid card number.'); return; }
+    if(!/^\d{2}\/\d{2}$/.test(exp)){ alert('Expiry must be MM/YY.'); return; }
+    if(!/^\d{3,4}$/.test(cvv)){ alert('Enter a valid CVV.'); return; }
+
+    // fake processing
+    document.getElementById('payBtn').textContent = 'Processing...'; document.getElementById('payBtn').disabled = true;
+    setTimeout(()=>{
+      // mark booking as paid (demo)
+      const booking = JSON.parse(localStorage.getItem('bookingDetails') || localStorage.getItem('selectedProduct') || '{}');
+      const receipt = { ...booking, paidAt: new Date().toISOString(), payment: {cardMasked: '**** **** **** ' + card.slice(-4)} };
+      localStorage.setItem('receipt', JSON.stringify(receipt));
+      // optionally clear selection except receipt
+      localStorage.removeItem('selectedProduct'); localStorage.removeItem('selectedAt'); localStorage.removeItem('bookingDetails');
+      window.location.href = 'thankyou.html';
+    }, 1100);
+  });
+
+  document.getElementById('backBtn').addEventListener('click', ()=> location.href='form.html');
+
+  // context menu
+  const ctx = document.getElementById('contextMenu');
+  window.addEventListener('contextmenu', (e)=>{
+    e.preventDefault();
+    ctx.style.left = e.pageX + 'px'; ctx.style.top = e.pageY + 'px'; ctx.style.display='block';
+  });
+  window.addEventListener('click', ()=> ctx.style.display='none');
+  ctx.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const a = ev.target.getAttribute('data-action');
+    if(!a) return;
+    if(a==='home') location.href='index.html';
+    if(a==='view') location.href='form.html';
+    if(a==='thank') document.getElementById('payBtn').click();
+    ctx.style.display='none';
+  });
+</script>
+</body>
+</html>
