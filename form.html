@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>WanderWave Travel — Booking Form</title>
+<style>
+  :root{--bg:#071025; --card:#0b1220; --accent:#ff6b6b; --muted:#94a3b8}
+  *{box-sizing:border-box}
+  body{margin:0; font-family:Inter,system-ui,Arial; background:linear-gradient(180deg,#051223,#071025); color:#e6eef8}
+  header{padding:18px; display:flex; justify-content:space-between; align-items:center; max-width:1000px;margin:0 auto}
+  .brand{display:flex; gap:12px; align-items:center}
+  .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;color:#071827;font-weight:700}
+  main{max-width:1000px;margin:12px auto;padding:20px;display:grid;grid-template-columns:1fr 380px; gap:20px}
+  .form-card{background:var(--card); border-radius:12px; padding:18px}
+  label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+  input{width:100%; padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.04); background:transparent;color:inherit;margin-bottom:12px}
+  .product-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent); padding:14px; border-radius:10px}
+  .product-card img{width:100%;border-radius:8px;margin-bottom:10px}
+  .summary{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .btn{background:var(--accent); color:#071827;padding:12px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04); color:var(--muted)}
+  .empty{color:var(--muted);padding:30px;border-radius:10px;background:rgba(255,255,255,0.02)}
+  /* context menu */
+  .context-menu{position:fixed; background:#071827; border:1px solid rgba(255,255,255,0.04); color:#e6eef8; padding:8px; border-radius:8px; display:none; z-index:9999; min-width:160px; box-shadow:0 10px 40px rgba(2,6,23,0.6)}
+  .context-menu button{background:transparent; color:inherit; border:0; width:100%; text-align:left; padding:10px; cursor:pointer; border-radius:6px}
+  .context-menu button:hover{background:rgba(255,255,255,0.02)}
+  @media (max-width:900px){ main{grid-template-columns:1fr; padding:12px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">WW</div>
+    <div>
+      <strong>WanderWave Travel</strong><div style="font-size:13px;color:var(--muted)">Booking form</div>
+    </div>
+  </div>
+  <div>
+    <a href="index.html" class="btn ghost">Back to Home</a>
+  </div>
+</header>
+
+<main>
+  <section class="form-card" aria-labelledby="formHeading">
+    <h2 id="formHeading">Traveler Details</h2>
+    <p style="color:var(--muted);margin-top:6px">Fill in your details and review your selected package.</p>
+    <form id="bookingForm" onsubmit="return false;" autocomplete="on">
+      <label for="fullName">Full Name</label>
+      <input id="fullName" name="fullName" required placeholder="e.g. Alex Morgan">
+      <label for="email">Email Address</label>
+      <input id="email" name="email" type="email" required placeholder="you@example.com">
+
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn" id="proceedBtn" type="button">Proceed to Payment</button>
+        <button class="btn ghost" id="clearBtn" type="button">Clear Selection</button>
+      </div>
+    </form>
+    <p id="note" style="color:var(--muted);font-size:13px;margin-top:10px">Tip: You can right-click to open a quick menu.</p>
+  </section>
+
+  <aside class="product-card" id="productArea">
+    <!-- product details injected here -->
+    <div class="empty" id="emptyState">No product selected yet. Go back to Home and choose a package.</div>
+  </aside>
+</main>
+
+<!-- custom context menu -->
+<div class="context-menu" id="contextMenu" role="menu">
+  <button data-action="home">Go to Home</button>
+  <button data-action="payment">Proceed to Payment</button>
+  <button data-action="clear">Clear Selection</button>
+</div>
+
+<script>
+  // load selected product from localStorage
+  function loadSelected(){
+    const raw = localStorage.getItem('selectedProduct');
+    const area = document.getElementById('productArea');
+    const empty = document.getElementById('emptyState');
+    if(!raw){
+      area.querySelectorAll('*').forEach(n=>n.remove());
+      empty.style.display = 'block';
+      return null;
+    }
+    const p = JSON.parse(raw);
+    empty.style.display='none';
+    area.innerHTML = `
+      <img src="${p.img}" alt="${p.city}">
+      <h3 style="margin:0 0 6px">${p.city}, ${p.country}</h3>
+      <div style="color:var(--muted);margin-bottom:8px">${p.desc}</div>
+      <div class="summary">
+        <div><strong>Price</strong><div style="font-size:13px;color:var(--muted)">$${p.price} per person</div></div>
+        <div style="text-align:right">
+          <div style="font-weight:800;font-size:18px">$${p.price}</div>
+          <div style="font-size:12px;color:var(--muted)">Selected: <span id="selectedTime"></span></div>
+        </div>
+      </div>
+    `;
+    const selectedAt = localStorage.getItem('selectedAt');
+    if(selectedAt) document.getElementById('selectedTime').textContent = new Date(selectedAt).toLocaleString();
+    return p;
+  }
+
+  const selected = loadSelected();
+
+  // fill form if booking details exist (user convenience)
+  const existingBooking = localStorage.getItem('bookingDetails');
+  if(existingBooking){
+    try{
+      const b = JSON.parse(existingBooking);
+      if(b.fullName) document.getElementById('fullName').value = b.fullName;
+      if(b.email) document.getElementById('email').value = b.email;
+    }catch(e){}
+  }
+
+  document.getElementById('proceedBtn').addEventListener('click', ()=>{
+    const product = localStorage.getItem('selectedProduct');
+    if(!product){
+      alert('Please select a package first (go to Home).');
+      return;
+    }
+    // simple form validation
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    if(!fullName || !email){
+      alert('Please fill your name and email.');
+      return;
+    }
+    // save booking details
+    const booking = {
+      product: JSON.parse(product),
+      fullName, email,
+      createdAt: new Date().toISOString()
+    };
+    localStorage.setItem('bookingDetails', JSON.stringify(booking));
+    // go to payment
+    window.location.href = 'payment.html';
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    if(confirm('Clear selected product from cart?')){
+      localStorage.removeItem('selectedProduct'); localStorage.removeItem('selectedAt');
+      loadSelected();
+    }
+  });
+
+  // CONTEXT MENU
+  const ctx = document.getElementById('contextMenu');
+  window.addEventListener('contextmenu', (e)=>{
+    e.preventDefault();
+    ctx.style.left = e.pageX + 'px'; ctx.style.top = e.pageY + 'px'; ctx.style.display = 'block';
+  });
+  window.addEventListener('click', ()=> ctx.style.display='none');
+  ctx.addEventListener('click', (ev)=>{
+    ev.stopPropagation();
+    const a = ev.target.getAttribute('data-action');
+    if(!a) return;
+    if(a==='home') location.href='index.html';
+    if(a==='payment'){
+      document.getElementById('proceedBtn').click();
+    }
+    if(a==='clear'){
+      document.getElementById('clearBtn').click();
+    }
+    ctx.style.display='none';
+  });
+</script>
+</body>
+</html>
